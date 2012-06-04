@@ -28,7 +28,7 @@ sampleData =  {
         },
     "source":
         {
-        "homepage": "http://www.sas.com",
+        "homepage": "http://www.foresightlinux.org",
         "licensing": [ 'licFooOne',
                        'licFooTwo',
                        'licFooThree',
@@ -238,6 +238,11 @@ def create_template(force=False,dir=os.getcwd()):
     try:
         if os.path.exists (dir + "/" + os.path.basename(dir) + ".sauce") and force == False:
             print "file already exists\n"
+        else:
+            f = open (dir + "/" + os.path.basename(dir) + ".sauce", "w")
+            f.write(json.dumps(sampleData, indent=4, sort_keys=True))
+            f.close()
+            
     except IOError as e:
         print("({})".format(e))
         
@@ -245,7 +250,7 @@ def main():
     # validate sampleData according to our schema
     validictory.validate(sampleData, schema)
     check_pkg()
-    create_template(dir="/tmp")
+    create_template()
     # print json.dumps(schema, indent=4, sort_keys=True)
     #print json.dumps(sampleData, indent=4, sort_keys=True)
 

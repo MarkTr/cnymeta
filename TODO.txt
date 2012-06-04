@@ -1,0 +1,22 @@
+
+.sauce Files:
+Commands:
+	-n [-d directory] [-f force]
+		create (basename <dir>).sauce
+		use Data from CONARY statefile, recipe or given parameters,
+		completed with default data of the embedded sample file.
+		
+	--add -t <src|pkg pkgname> -k <keypair>
+		add key pair to 
+
+
+-n:
+	Check for Conary Statefile and Recipe->
+	Use information to create .sauce (enhance by --add -t -k)
+	if not use tweaked sample (basename as name)
+
+validate result before writing.
+
+--add:
+	Use provided filds in template to enrich the sauce,
+	beyond defaults or recipe/CONARY provided data
