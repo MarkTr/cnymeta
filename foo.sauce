@@ -1,0 +1,65 @@
+<recipe type="default">
+  
+  <source>
+    <homepage>http://</homepage>
+    <licensing>
+      <license>MPLv1.1</license>
+      <license>GPLv2+</license>
+      <license>LGPLv2.1+</license>
+    </licensing>
+    <tags>
+      <tag>bootstrap</tag>
+      <tag>core</tag>
+    </tags>
+    <aliases>
+      <alias distro="fedora">fedora_foo</alias>
+      <alias distro="ubuntu">ubuntu_foo</alias>
+    </aliases>
+  </source>
+  <flavors>
+    <flavor name="bootstrap">
+      <flavoring>bootstrap,!cross</flavoring>
+      <flavoring>cross,bootstrap</flavoring>
+    </flavor>
+    <flavor name="!bootstrap">
+      <flavoring>!cross,!bootstrap</flavoring>
+    </flavor>
+  </flavors>
+  <targets>
+    <target arch="x86">True</target>
+    <target arch="x86_64">True</target>
+  </targets>
+  <packages>
+    <package name="foo">
+      <licensing>
+        <license>MPLv1.1</license>
+      </licensing>
+      <alias distro="fedora">fedora_foo</alias>
+      <alias distro="ubuntu">ubuntu_foo</alias>
+      <tags>
+        <tag>core</tag>
+      </tags>
+      <descriptions>
+        <locale lang="en">
+          <summary>Runtime libraries for foo</summary>
+          <description>This package contains runtime libraries for use by foo:- the libfoo dynamic library, for use by applications that embed foo as a scripting language, and by the main "foo" executable - the foo standard library</description>
+        </locale>
+      </descriptions>
+    </package>
+    <package name="pkgspeced_from_foo">
+      <licensing>
+        <license>LGPLv2+</license>
+      </licensing>
+      <descriptions>
+        <locale lang="en">
+          <summary>extra foo for foo</summary>
+          <description>....</description>
+        </locale>
+        <locale lang="pt_PT">
+          <summary>extra foo for foo</summary>
+          <description>....</description>
+        </locale>
+      </descriptions>
+    </package>
+  </packages>
+</recipe>
