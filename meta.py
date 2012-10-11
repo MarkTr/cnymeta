@@ -18,8 +18,8 @@ def defineArgs(meta):
     changeparser.set_defaults(func=meta.changeCmd)
     
     for p in [addparser,changeparser,rmparser,showparser]:
-        p.add_argument("-p", action="store", dest="path", default="", help="path inside sauce")
-        p.add_argument("-t", action="store", dest="tag", help="tag to add/remove/show")
+        p.add_argument("-p", action="store", dest="path", default="", required=True, help="path inside sauce")
+        p.add_argument("-t", action="store", dest="tag", required= p!=showparser, help="tag to add/remove/show")
         p.add_argument("-x", action="store", dest="text", help="text to add/remove/show")
         p.add_argument("-a", action="store", dest="attribute", help="attribute to add/remove/show")
     parser.add_argument("-n", action="store_true", default=False, help="Create new metafile")
@@ -45,12 +45,12 @@ class Metaparser:
                 e.text = text
         self.tree.write("addtest.sauce")
             
-    def rmMeta(self, path="/", tag="", attribute="", text=""):
-        for e in root.findall(path):
-            if not tag or tag == e.tag and
-               not text or text = e.text and
-               not attribute or attribute == e.attrib:
-                   pass
+    def rmMeta(self, path="/", tag="", attribute=None, text=""):
+        for p in self.root.findall(path):
+            for e in p.getchildren():
+                if not tag == e.tag and not text or text == e.text and not attribute or attribute == e.attrib:
+                   p.remove(e)
+                   self.tree.write("rmsauce.foo")
     
     def changeMeta(self, path="/", tag="", attribute=None, text=None):
         for l in root.findall("source/licensing/license"):
@@ -69,7 +69,8 @@ class Metaparser:
         self.addMeta(path=args.path, tag=args.tag, attribute=args.attribute, text=args.text)
     
     def rmCmd(self, args):
-        pass
+        attribute = self.splitAttribute(args.attribute)
+        self.rmMeta(path=args.path, tag=args.tag, attribute=attribute, text=args.text)
         
     def delCmd(self, args):
         pass
@@ -81,6 +82,11 @@ class Metaparser:
     def changeCmd(self, args):
         pass
 
+    def splitAttribute(self, attributeStr):
+        if not attributeStr:
+            return None
+        tmpattr = attributeStr.split('=')
+        return {tmpattr[0]:tmpattr[1]}
         
 def main():
     meta = Metaparser("foo.sauce")
