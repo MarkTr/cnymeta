@@ -1,4 +1,5 @@
 #! /usr/bin/python
+import sys
 import argparse
 import xml.etree.ElementTree as et
 
@@ -29,34 +30,58 @@ def defineArgs(meta):
     args = parser.parse_args()
     args.func(args)
 
-class Metaparser:    
+# Maybe we need something like this to preserve Comments and doctype definition
+class PIParser(et.XMLTreeBuilder):
 
+   def __init__(self):
+       et.XMLTreeBuilder.__init__(self)
+       # assumes ElementTree 1.2.X
+       self._parser.CommentHandler = self.handle_comment
+       self._parser.ProcessingInstructionHandler = self.handle_pi
+       self._target.start("document", {})
+
+   def close(self):
+       self._target.end("document")
+       return et.XMLTreeBuilder.close(self)
+
+   def handle_comment(self, data):
+       self._target.start(et.Comment, {})
+       self._target.data(data)
+       self._target.end(et.Comment)
+
+   def handle_pi(self, target, data):
+       self._target.start(et.PI, {})
+       self._target.data(target + " " + data)
+       self._target.end(et.PI) 
+
+class Metaparser:   
+    
     def __init__(self, sauce):
         self.tree = et.parse(sauce)
         self.root = self.tree.getroot()
-        
+            
     def addMeta(self, path="/", tag="", attribute=None, text=""):
         if tag:
             parent = self.root.find(path)
             e = et.SubElement(parent,tag)
             if attribute:
-                e.attrib = attrib
+                e.attrib = attribute
             if text:
                 e.text = text
-        self.tree.write("addtest.sauce")
+        self.write("addtest.sauce")
             
     def rmMeta(self, path="/", tag="", attribute=None, text=""):
         for p in self.root.findall(path):
             for e in p.getchildren():
                 if not tag == e.tag and not text or text == e.text and not attribute or attribute == e.attrib:
                    p.remove(e)
-                   self.tree.write("rmsauce.foo")
+                   self.write("rmtest.sauce")
     
     def changeMeta(self, path="/", tag="", attribute=None, text=None):
         for l in root.findall("source/licensing/license"):
             if l.text == "LGPLv2+":
                 l.text = "LGPLv2.1+"
-        selftree.write("foo.sauce")
+        self.write("changetest.sauce")
         
     def showMeta(self, path=""):
         if not True:
@@ -66,7 +91,8 @@ class Metaparser:
             et.dump(e)
     
     def addCmd(self, args):
-        self.addMeta(path=args.path, tag=args.tag, attribute=args.attribute, text=args.text)
+        attribute = self.splitAttribute(args.attribute)
+        self.addMeta(path=args.path, tag=args.tag, attribute=attribute, text=args.text)
     
     def rmCmd(self, args):
         attribute = self.splitAttribute(args.attribute)
@@ -87,6 +113,12 @@ class Metaparser:
             return None
         tmpattr = attributeStr.split('=')
         return {tmpattr[0]:tmpattr[1]}
+        
+    def write(self, filename):
+        if sys.version_info<(2,7):
+            self.tree.write(filename, encoding="UTF-8")
+        else:
+            self.tree.write(filename, encoding="utf-8", xml_declaration=True)
         
 def main():
     meta = Metaparser("foo.sauce")
