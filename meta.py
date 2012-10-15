@@ -39,30 +39,6 @@ def defineArgs(meta):
     args = parser.parse_args()
     args.func(args)
 
-# Maybe we need something like this to preserve Comments and doctype definition
-#class PIParser(et.XMLTreeBuilder):
-
-   #def __init__(self):
-       #et.XMLTreeBuilder.__init__(self)
-       ## assumes ElementTree 1.2.X
-       #self._parser.CommentHandler = self.handle_comment
-       #self._parser.ProcessingInstructionHandler = self.handle_pi
-       #self._target.start("document", {})
-
-   #def close(self):
-       #self._target.end("document")
-       #return et.XMLTreeBuilder.close(self)
-
-   #def handle_comment(self, data):
-       #self._target.start(et.Comment, {})
-       #self._target.data(data)
-       #self._target.end(et.Comment)
-
-   #def handle_pi(self, target, data):
-       #self._target.start(et.PI, {})
-       #self._target.data(target + " " + data)
-       #self._target.end(et.PI)
-
 class MetaParser:
     def __init__(self, sauce):
         self.tree = et.parse(sauce)
@@ -110,7 +86,8 @@ class MetaParser:
             parent = self.root if path=="" else self.root.find(path)
             e = et.SubElement(parent,tag)
             if attribute:
-                e.attrib = attribute
+                for k in attribute.keys():
+                    e.set(k, attribute[k])
             if text:
                 e.text = text
         self.write("addtest.sauce")
