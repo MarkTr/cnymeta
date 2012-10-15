@@ -1,9 +1,10 @@
 #! /usr/bin/python
 import sys
 import argparse
-import xml.etree.ElementTree as et
+import lxml.etree as et
+#import xml.etree.ElementTree as et
 import os #Metatemplate
-from xml.dom.minidom import parseString # no prettyprinting in etree
+#from xml.dom.minidom import parseString # no prettyprinting in etree
 
 def defineArgs(meta):
     parser = argparse.ArgumentParser('Create and modify metafiles')
@@ -39,28 +40,28 @@ def defineArgs(meta):
     args.func(args)
 
 # Maybe we need something like this to preserve Comments and doctype definition
-class PIParser(et.XMLTreeBuilder):
+#class PIParser(et.XMLTreeBuilder):
 
-   def __init__(self):
-       et.XMLTreeBuilder.__init__(self)
-       # assumes ElementTree 1.2.X
-       self._parser.CommentHandler = self.handle_comment
-       self._parser.ProcessingInstructionHandler = self.handle_pi
-       self._target.start("document", {})
+   #def __init__(self):
+       #et.XMLTreeBuilder.__init__(self)
+       ## assumes ElementTree 1.2.X
+       #self._parser.CommentHandler = self.handle_comment
+       #self._parser.ProcessingInstructionHandler = self.handle_pi
+       #self._target.start("document", {})
 
-   def close(self):
-       self._target.end("document")
-       return et.XMLTreeBuilder.close(self)
+   #def close(self):
+       #self._target.end("document")
+       #return et.XMLTreeBuilder.close(self)
 
-   def handle_comment(self, data):
-       self._target.start(et.Comment, {})
-       self._target.data(data)
-       self._target.end(et.Comment)
+   #def handle_comment(self, data):
+       #self._target.start(et.Comment, {})
+       #self._target.data(data)
+       #self._target.end(et.Comment)
 
-   def handle_pi(self, target, data):
-       self._target.start(et.PI, {})
-       self._target.data(target + " " + data)
-       self._target.end(et.PI)
+   #def handle_pi(self, target, data):
+       #self._target.start(et.PI, {})
+       #self._target.data(target + " " + data)
+       #self._target.end(et.PI)
 
 class MetaParser:
     def __init__(self, sauce):
@@ -68,7 +69,6 @@ class MetaParser:
         self.root = self.tree.getroot()
 
     def populateSource(self):
-        homepage="http://www.foresightlinux.org"
         self.addMeta("", tag="source")
         self.addMeta("source", tag="homepage", text="http://www.foresightlinux.org")
         self.addMeta("source", tag="licensing")
@@ -113,7 +113,7 @@ class MetaParser:
                 e.attrib = attribute
             if text:
                 e.text = text
-        #self.write("addtest.sauce")
+        self.write("addtest.sauce")
 
     def rmMeta(self, path="", tag="", attribute=None, text=""):
         for p in self.root.findall(path):
@@ -129,7 +129,11 @@ class MetaParser:
                      if text and oldtext == e.text:
                          e.text=text
                      if attribute and oldattribute == e.attrib:
-                         e.attrib=attribute
+                         for k in e.keys():
+                             if not attribute.has_key(k):
+                                 del e.attrib[k]
+                         for k in attribute.keys():
+                             e.set(k, attribute[k])
         self.write("changetest.sauce")
 
     def showMeta(self, path=""):
@@ -171,13 +175,13 @@ class MetaParser:
         return {tmpattr[0]:tmpattr[1]}
 
     def write(self, filename):
-        sauce = open(filename, 'w')
-        sauce.write(parseString(et.tostring(self.tree.getroot(),encoding="utf-8")).toprettyxml())
-        sauce.close()
-        #if sys.version_info<(2,7):
-        #    self.tree.write(filename, encoding="UTF-8")
-        #else:
-        #    self.tree.write(filename, encoding="utf-8", xml_declaration=True)
+        #sauce = open(filename, 'w')
+        #sauce.write(parseString(et.tostring(self.tree.getroot(),encoding="utf-8")).toprettyxml())
+        #sauce.close()
+        if sys.version_info<(2,7):
+            self.tree.write(filename, encoding="utf-8", pretty_print=True, xml_declaration=True)
+        else:
+            self.tree.write(filename, encoding="utf-8", xml_declaration=True)
 
 def main():
     meta = MetaParser("foo.sauce")
