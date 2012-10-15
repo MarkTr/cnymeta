@@ -107,7 +107,7 @@ class MetaParser:
 
     def addMeta(self, path="", tag="", attribute=None, text=""):
         if tag:
-            parent = self.root.find(path)
+            parent = self.root if path=="" else self.root.find(path)
             e = et.SubElement(parent,tag)
             if attribute:
                 e.attrib = attribute
