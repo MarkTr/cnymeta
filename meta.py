@@ -33,7 +33,6 @@ def defineArgs(meta):
     changeparser.add_argument("-ox", action="store", dest="oldtext", help="text to replace")
     changeparser.add_argument("-oa", action="store", dest="oldattr", help="attribute to replace")
     rmparser.add_argument("-f", action="store_true", dest="force", default=False, help="Delete all matching tags")
-    newparser.add_argument("-n", action="store_true", default=False, help="Create new metafile")
     newparser.add_argument("-t", action="store", dest="recipeType", default="default", help="Type of recipe <default|superclass|factory|info|redirect>")
     newparser.add_argument("-f", action="store_true", dest="force", default=False, help="Overwrite existing files")
     newparser.add_argument("-d", action="store", dest="dir", default=None, help="create template here instead of pwd")
@@ -53,7 +52,6 @@ class MetaParser:
             self.path = self.path.rstrip('/')
             self.name = os.path.basename(self.path)
             self.sauce = self.path +'/' + self.name + ".sauce"
-            print self.sauce
             if os.path.isfile(self.sauce):
                 self.tree = et.parse(self.sauce)
                 self.root = self.tree.getroot()
@@ -87,6 +85,7 @@ class MetaParser:
 
         self.tree = et.ElementTree(et.XML("<recipe></recipe>"))
         self.root = self.tree.getroot()
+        self.root.set('type', recipeType)
         self.populateSource()
         self.populateFlavors()
         self.populateTargets()
@@ -154,6 +153,8 @@ class MetaParser:
 
     def newCmd(self, args):
         self.initSauce(args)
+        if os.path.isfile(self.sauce) and not args.force:
+            exit("soucefile already exists")
         if not args.recipeType:
             args.recipeType="default"
         self.createTemplate(args.recipeType)
