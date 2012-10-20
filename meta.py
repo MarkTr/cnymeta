@@ -26,9 +26,10 @@ def defineArgs(meta):
 
     for p in [addparser,changeparser,rmparser,showparser]:
         p.add_argument("-p", action="store", dest="path", default="", required=True, help="path inside sauce")
-        p.add_argument("-t", action="store", dest="tag", required= p!=showparser, help="tag to add/remove/show")
-        p.add_argument("-x", action="store", dest="text", help="text to add/remove/show")
-        p.add_argument("-a", action="store", dest="attribute", help="attribute to add/remove/show")
+        if p!=showparser:
+            p.add_argument("-t", action="store", dest="tag", required=True, help="tag to add/remove/show")
+            p.add_argument("-x", action="store", dest="text", help="text to add/remove/show")
+            p.add_argument("-a", action="store", dest="attribute", help="attribute to add/remove/show")
         p.add_argument("-d", action="store", dest="dir", default=None, help="create template here instead of pwd")
     changeparser.add_argument("-ox", action="store", dest="oldtext", help="text to replace")
     changeparser.add_argument("-oa", action="store", dest="oldattr", help="attribute to replace")
@@ -122,6 +123,9 @@ class MetaParser:
         self.write()
 
     def showMeta(self, path=""):
+        if path=="":
+            et.dump(self.root)
+            return
         for e in self.root.findall(path):
             et.dump(e)
 

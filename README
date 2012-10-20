@@ -30,6 +30,9 @@
         * cleans all metadata, same as new -f, look there for details
         
     show                Show meta information
+            -h, --help  show this help message and exit
+            -p PATH     path inside sauce
+            -d DIR      create template here instead of pwd
         example:
             To see all tags
            ./meta.py show -p "source/tags"
