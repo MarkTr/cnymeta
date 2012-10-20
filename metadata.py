@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
 import lxml.etree as et
+import os
+import sys
 
 class MetaData:
     def __init__(self, sauce):
+        if not sauce or sauce == "":
+            path = os.getcwd().rstrip('/') 
+            name = os.path.basename(path)
+            sauce = path +'/' + name + ".sauce"
+        if not os.path.isfile(sauce):
+            sys.exit ('saucefile does not exist')
+        self.sauce=sauce
         self.tree = et.parse(sauce)
         self.root = self.tree.getroot()
         self.recipeType = self.root.attrib['type']
