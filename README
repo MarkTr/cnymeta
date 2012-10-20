@@ -48,6 +48,10 @@
         examples:
             This replaces a fedora alias with a gentoo one:
            ./meta.py change -p "source/aliases" -t alias -ox fedora_foo -x gentoo_foo -oa distro=fedora -a distro=gentoo 
+        *Channging of the type attribute of <recipe> is a bit 'ugly' because <recipe> is the root node:
+            ./meta.py change -p "" -t recipe -oa type=default -a type=redirect
+                or
+            ./meta.py change -p "" -t "" -oa type=redirect -a type=info
 
     new                 Create a new Template
             -t RECIPETYPE  Type of recipe <default|superclass|factory|info|redirect>
