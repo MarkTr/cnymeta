@@ -4,7 +4,7 @@ import os
 import sys
 
 class MetaData:
-    def __init__(self, sauce):
+    def __init__(self, sauce=None):
         if not sauce or sauce == "":
             path = os.getcwd().rstrip('/') 
             name = os.path.basename(path)
