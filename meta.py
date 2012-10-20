@@ -112,6 +112,12 @@ class MetaParser:
                     self.write()
 
     def changeMeta(self, path="", tag="", oldattribute=None, attribute=None, oldtext=None, text=None):
+        if path=="" and tag=="" or tag=='recipe':
+            if attribute and oldattribute==self.root.attrib:
+                self.root.attrib.clear()
+                self.root.attrib.update(attribute)
+                self.write()
+            return
         for p in self.root.findall(path):
             for e in p.getchildren():
                 if tag == e.tag:
