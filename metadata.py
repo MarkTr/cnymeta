@@ -4,21 +4,30 @@ import os
 import sys
 
 class MetaData:
-    def __init__(self, sauce=None):
+    def __init__(self, sauce=None, createTemplate=False):
         if not sauce or sauce == "":
             path = os.getcwd().rstrip('/') 
             name = os.path.basename(path)
             sauce = path +'/' + name + ".sauce"
-        if not os.path.isfile(sauce):
+        if not createTemplate and not os.path.isfile(sauce):
             sys.exit ('saucefile does not exist')
         self.sauce=sauce
-        self.tree = et.parse(sauce)
-        self.root = self.tree.getroot()
+        if not createTemplate:
+            self.tree = et.parse(sauce)
+            self.root = self.tree.getroot()
+        else:
+            self.createNew()
+            
         self.recipeType = self.root.attrib['type']
         self.source = Source(self.root)
         self.flavors = Flavors(self.root)
         self.targets = Targets(self.root)
         self.packages = Packages(self.root)
+     
+    def createNew(self):
+        self.tree = et.ElementTree(et.XML("<recipe></recipe>"))
+        self.root = self.tree.getroot()
+        self.root.set('type', 'default')
         
     def write(self):
         tree = et.ElementTree(et.XML("<recipe></recipe>"))
@@ -100,23 +109,26 @@ class Source:
         
     def _initHomepage(self,root):
         e = root.find('source/homepage')
-        self.homepage = e.text
+        self.homepage = e.text if e else ""
             
     def _initLicenses(self,root):
         self.licenses=[]
         p = root.find('source/licensing')
+        if not p: return
         for e in p.getchildren():
             self.licenses.append(e.text)
     
     def _initTags(self,root):
         self.tags=[]
         p = root.find('source/tags')
+        if not p: return
         for e in p.getchildren():
             self.tags.append(e.text)
 
     def _initAliases(self,root):
         self.aliases={}
         p = root.find('source/aliases')
+        if not p: return
         for e in p.getchildren():
             self.aliases[e.attrib['distro']] = e.text
  
@@ -124,6 +136,7 @@ class Flavors:
     def __init__(self,root):
         self.flavor = {}
         p = root.findall('flavors/flavor')
+        if not p: return
         for e in p:
             flavoring = []
             for f in e.getchildren():
@@ -135,6 +148,7 @@ class Targets:
     def __init__(self,root):
         self.target = {}
         p = root.find('targets')
+        if not p: return
         for e in p:
             self.target[e.attrib['arch']] = e.text
         
