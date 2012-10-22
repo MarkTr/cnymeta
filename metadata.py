@@ -20,6 +20,77 @@ class MetaData:
         self.targets = Targets(self.root)
         self.packages = Packages(self.root)
         
+    def write(self):
+        tree = et.ElementTree(et.XML("<recipe></recipe>"))
+        root = tree.getroot()
+        root.set('type', self.recipeType)
+        
+        # source
+        source = et.SubElement(root,"source")
+        
+        homepage=et.SubElement(source,"homepage")
+        homepage.text=self.source.homepage
+        
+        self._createLicensing(self.source.licenses,source)
+        
+        self._createTags(self.source.tags,source)
+            
+        self._createAliases(self.source.aliases,source)
+        
+        # Flavors
+        flavors=et.SubElement(root,'flavors')
+        for k in self.flavors.flavor:
+            flavor=et.SubElement(flavors,'flavor',attrib={'name':k})
+            for e in self.flavors.flavor[k]:
+                f=et.SubElement(flavor,'flavoring')
+                f.text=e
+        
+        # Targets
+        targets=et.SubElement(root,'targets')
+        for k in self.targets.target:
+            t=et.SubElement(targets,'target',attrib={'arch':k})
+            t.text=self.targets.target[k]
+            
+        # packages
+        packages=et.SubElement(root,'packages')
+        for k in self.packages.package:
+            p=et.SubElement(packages,'package',{'name':k})
+            package=self.packages.package[k]
+            self._createLicensing(package.licenses,p)
+            self._createAliases(package.aliases,p)
+            self._createTags(package.tags,p)
+            descriptions=et.SubElement(p,'description')
+            for lang in package.descriptions:
+                l=et.SubElement(descriptions,'locale',{'lang':lang})
+                locale=package.descriptions[lang]
+                for i in locale:
+                    e=et.SubElement(l,i)
+                    e.text=locale[i]
+                    
+        self.tree=tree
+        self.root=root
+
+        self.tree.write(self.sauce, encoding="utf-8", pretty_print=True, xml_declaration=True)
+        
+    def _createLicensing(self,licenses,parent):
+        licensing=et.SubElement(parent,"licensing")
+        for l in licenses:
+            le = et.SubElement(licensing,"license")
+            le.text=l
+            
+    def _createAliases(self,aliases,parent):
+        al=et.SubElement(parent,'aliases')
+        for k in aliases:
+            a=et.SubElement(al,'alias',attrib={'distro':k})
+            a.text=aliases[k]
+            
+    def _createTags(self,tags,parent):
+        t=et.SubElement(parent,"tags")
+        for tag in tags:
+            te = et.SubElement(t,"tag")
+            te.text=tag
+
+            
 class Source:
     def __init__(self,root):
         self._initHomepage(root)
