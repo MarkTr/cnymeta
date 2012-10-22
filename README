@@ -62,6 +62,10 @@
             ./meta.py new -f -t factory
             
 * metadata maps metadata into python objects/dicts
+	MetaData(sauce=None, createTemplate=False) - class that maps Metadata to python.
+		write() - writes all Changes to the saucefile
+		mapData(createTemplate=False) - reloads the Metadata or creates an empty template	 
+
     examples:
         >>> import metadata as md
         >>> m=md.MetaData() # can take a filename as argument, default is `basename`.sauce in current directory
