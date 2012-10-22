@@ -34,8 +34,10 @@
       <licensing>
         <license>MPLv1.1</license>
       </licensing>
-      <alias distro="fedora">fedora_foo</alias>
-      <alias distro="ubuntu">ubuntu_foo</alias>
+      <aliases>
+        <alias distro="fedora">fedora_foo</alias>
+        <alias distro="ubuntu">ubuntu_foo</alias>
+      </aliases>
       <tags>
         <tag>core</tag>
       </tags>
