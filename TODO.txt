@@ -2,3 +2,68 @@
 * add editing of metadata via python
 * abstract metadata from xml
 * Get usefull information from recipe
+
+<target arch="x86">True</target> -> <target>x86</target> (simmilar syntax to tags for consistency.
+
+*config* (for consistency with cvc / rmake / conary) and *check*.
+    *check* will do internal consistency checks so that minimal info always
+    there.
+    *config* will show what is there ... (but not in xml ...) in key/value pairs. (for
+    easy scriptability). so ... spoon config
+        {source,flavors,etc} ... output pretty simmilar to conary config.
+
+    checks ... it's trivial.  if pkgType not
+    default no packages block  nor flavors nor
+    arches. so for all recype types ! default just <source> block.
+    for default... 
+        arches have to be set and packages too. 
+        on packages all entries need to have a description with a
+        'en' locale. that is mandatory. other locales. aren't.
+        <source> block needs to have licensing set.
+        mandatory. if not defined too in <packages> info in source inherited.
+        targets mandatory for default. 
+    config output is flat? so I
+    would need to do pkgfooaliases=distroname:alias
+    pkgspecedfromfooaliases=distroname:alias
+    
+for creating sauce files ... 
+    two calls.
+        new and reset - reset == new -f (10:49:04)
+            delete goes away.
+    then add, remove, update calls.
+    for some cases ... say source/homepage add and update same. for others
+    aren't.
+then the syntax. 
+    for new you don' t care at all what was there _before_
+        if any you just override.
+    for delete it depends ... 
+        you may need just one arg
+        (drop all subtree) and 2 to del a specific pair. 
+    same for update. given that we're going to have check for validation.
+that cli will get nicer if we only allow a single op per command invocation 
+so something like ... 
+    spoon update packages name=foo license=bar 
+    - will that add a license bar to the existing or will it replace existing licenses with
+        bar? 
+        in this case. add == update.
+        spoon rm packages name=foo license=bar to drop one
+        we'd use above.
+        spoon  packages rm name=foo license=bar  ;  spoon packages add name=foo license=foobar
+
+we could tweak syntax a bit ... in a way of polish notation. (10:57:26) António Meireles:  spoon packages
+<operation> ... so that at time of
+evaluating <operation> we already know where it is going to occur
+spoon <packages|source|flavors|targets> <add|rm|update>
+ so it's more like we could drop add as an update will either add or change
+depending on the field ('unique' fields always update all other fields add)
+
+spoon source  <add|rm|update> ... package  <add|rm|update> ... and so
+on.
+
+check and config mutually exclusive between them and both mutually exclusive with
+<packages|source|flavors|targets>
+and we can't call at all  <packages|source|flavors|targets> _before_ we do ... spoon
+recipe add type=<default|...> will be set
+in template as default anyway 
+spoon <packages|source|flavors|targets> will only be calalble after spoon new 
+    some tests can go built in. shareable code.
