@@ -28,6 +28,11 @@ class MetaData:
         self.flavors = Flavors(self.root)
         self.targets = Targets(self.root)
         self.packages = Packages(self.root)
+        
+        if createTemplate==True:
+            self.targets.target.append('x86')
+            self.targets.target.append('x86_64')
+            
     
     def write(self):
         tree = et.ElementTree(et.XML("<recipe></recipe>"))
@@ -57,8 +62,8 @@ class MetaData:
         # Targets
         targets=et.SubElement(root,'targets')
         for k in self.targets.target:
-            t=et.SubElement(targets,'target',attrib={'arch':k})
-            t.text=self.targets.target[k]
+            t=et.SubElement(targets,'target')
+            t.text=k
             
         # packages
         packages=et.SubElement(root,'packages')
@@ -146,11 +151,11 @@ class Flavors:
             
 class Targets:
     def __init__(self,root):
-        self.target = {}
+        self.target = []
         p = root.find('targets')
         if p is None: return
         for e in p:
-            self.target[e.attrib['arch']] = e.text
+            self.target.append(e.text)
         
 class Packages:
     def __init__(self,root):

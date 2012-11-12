@@ -27,8 +27,8 @@
     </flavor>
   </flavors>
   <targets>
-    <target arch="x86">True</target>
-    <target arch="x86_64">True</target>
+    <target>x86</target>
+    <target>x86_64</target>
   </targets>
   <packages>
     <package name="foo">
