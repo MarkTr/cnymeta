@@ -14,15 +14,15 @@ class Spoon:
         self._defineArgs()
 
     def __checkKeyword(self,word):
-        return (word=='source' or word=='package' or word=='flavor'
+        return (word=='source' or word=='package' or word=='flavor' or word=='new'
                 or word=='target' or word=='config' or word=='check')
                 
     def _defineArgs(self):
-        parser = argparse.ArgumentParser('Create and modify metafiles')
-        parser.add_argument("argument", action="store",nargs='+', help="tag to add/remove/show")
+        tmpparser = argparse.ArgumentParser('moot')
+        tmpparser.add_argument("argument", action="store",nargs='+', help="tag to add/remove/show")
         tmparg=['--']
         tmparg.extend(sys.argv[1:])
-        args = parser.parse_args(tmparg)
+        args = tmpparser.parse_args(tmparg)
         newargs=[]
         sublist=None
         for arg in args.argument:
@@ -30,10 +30,27 @@ class Spoon:
                 if sublist is not None:
                     newargs.append(sublist)
                 sublist=[]
-            sublist.append(arg)
+            if sublist is not None:
+                sublist.append(arg)
         newargs.append(sublist)
 
-        #parser = argparse.ArgumentParser('Create and modify metafiles')
+        parser = argparse.ArgumentParser('Create and modify metafiles')
+        subparsers = parser.add_subparsers(description="update/rm/new/reset/config/check")
+        configparser = subparsers.add_parser("config", help="print config")
+        checkparser = subparsers.add_parser("check", help="check meta information")
+        newparser = subparsers.add_parser("new", help="create new metadata template")
+        resetparser = subparsers.add_parser("reset", help="reset metadata template")
+        commonparser = argparse.ArgumentParser(add_help=False)
+        commonsubparsers = commonparser.add_subparsers()
+        updateparser = commonsubparsers.add_parser("update", help="add/update meta information")
+        rmparser = commonsubparsers.add_parser("rm", help="remove meta information")
+        sourceparser = subparsers.add_parser("source", parents=[commonparser], help="modify source component")
+        pkgparser = subparsers.add_parser("package", parents=[commonparser], help="modify packages component")
+        flavorparser = subparsers.add_parser("flavor", parents=[commonparser], help="modify flavor component")
+        targetparser = subparsers.add_parser("target", parents=[commonparser], help="modify target component")
+        for arg in newargs:
+            args=parser.parse_args(arg)
+        
         #subparsers = parser.add_subparsers(description="add remove delete show change")
         #addparser = subparsers.add_parser("add", help="Add new meta information")
         #rmparser = subparsers.add_parser("rm", help="Remove meta information")
