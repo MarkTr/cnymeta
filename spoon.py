@@ -18,7 +18,7 @@ class Spoon:
                 or word=='target' or word=='config' or word=='check')
                 
     def _defineArgs(self):
-        tmpparser = argparse.ArgumentParser('moot')
+        tmpparser = argparse.ArgumentParser(add_help=False)
         tmpparser.add_argument("argument", action="store",nargs='+', help="tag to add/remove/show")
         tmparg=['--']
         tmparg.extend(sys.argv[1:])
@@ -40,16 +40,35 @@ class Spoon:
         checkparser = subparsers.add_parser("check", help="check meta information")
         newparser = subparsers.add_parser("new", help="create new metadata template")
         resetparser = subparsers.add_parser("reset", help="reset metadata template")
+        
         commonparser = argparse.ArgumentParser(add_help=False)
-        commonsubparsers = commonparser.add_subparsers()
-        updateparser = commonsubparsers.add_parser("update", help="add/update meta information")
-        rmparser = commonsubparsers.add_parser("rm", help="remove meta information")
+        commonsubparsers = commonparser.add_subparsers(dest='action')
+        commonargument = argparse.ArgumentParser(add_help=False)
+        commonargument.add_argument("argument", action="store",nargs='+',
+            choices=['homepage','license','tag','alias','name','summary','description','flavor', 'target'],
+            help="tag to add/remove/show")
+        
+        updateparser = commonsubparsers.add_parser("update", parents=[commonargument], help="add/update meta information")
+        rmparser = commonsubparsers.add_parser("rm", parents=[commonargument], help="remove meta information")
         sourceparser = subparsers.add_parser("source", parents=[commonparser], help="modify source component")
         pkgparser = subparsers.add_parser("package", parents=[commonparser], help="modify packages component")
         flavorparser = subparsers.add_parser("flavor", parents=[commonparser], help="modify flavor component")
         targetparser = subparsers.add_parser("target", parents=[commonparser], help="modify target component")
+        typeparser = subparsers.add_parser("type", help="set the type of the recipe")
+        typeparser.add_argument("recipeType", action="store", choices=['default', 'superclass', 'factory', 'info', 'redirect'])
+        configparser.set_defaults(func=self._sourceCmd)
+        checkparser.set_defaults(func=self._sourceCmd)
+        newparser.set_defaults(func=self._sourceCmd)
+        resetparser.set_defaults(func=self._sourceCmd)
+        sourceparser.set_defaults(func=self._sourceCmd)
+        pkgparser.set_defaults(func=self._sourceCmd)
+        flavorparser.set_defaults(func=self._sourceCmd)
+        targetparser.set_defaults(func=self._sourceCmd)
+        typeparser.set_defaults(func=self._sourceCmd)
+        
         for arg in newargs:
             args=parser.parse_args(arg)
+            args.func(args)
         
         #subparsers = parser.add_subparsers(description="add remove delete show change")
         #addparser = subparsers.add_parser("add", help="Add new meta information")
@@ -171,10 +190,14 @@ class Spoon:
         for e in self.root.findall(path):
             et.dump(e)
 
-    def addCmd(self, args):
-        self.initSauce(args)
-        attribute = self.splitAttribute(args.attribute)
-        self.addMeta(path=args.path, tag=args.tag, attribute=attribute, text=args.text)
+    def _sourceCmd(self, args):
+        if args.action=='update':
+            print 'update', args.argument
+        else:
+            print 'rm', args.argument
+        #self.initSauce(args)
+        #attribute = self.splitAttribute(args.attribute)
+        #self.addMeta(path=args.path, tag=args.tag, attribute=attribute, text=args.text)
 
     def rmCmd(self, args):
         self.initSauce(args)
