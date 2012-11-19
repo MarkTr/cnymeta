@@ -4,7 +4,7 @@ import os
 import sys
 
 class MetaData:
-    def __init__(self, sauce=None, createTemplate=False):
+    def __init__(self, sauce=None, createTemplate=False, recipeType='default'):
         if not sauce or sauce == "":
             path = os.getcwd().rstrip('/') 
             name = os.path.basename(path)
@@ -12,16 +12,16 @@ class MetaData:
         if not createTemplate and not os.path.isfile(sauce):
             sys.exit ('saucefile does not exist')
         self.sauce=sauce
-        self.mapData(createTemplate=createTemplate)
+        self.mapData(createTemplate=createTemplate,recipeType=recipeType)
     
-    def mapData(self,createTemplate=False):
+    def mapData(self,createTemplate=False, recipeType='default'):
         if not createTemplate:
             self.tree = et.parse(self.sauce)
             self.root = self.tree.getroot()
         else:
             self.tree = et.ElementTree(et.XML("<recipe></recipe>"))
             self.root = self.tree.getroot()
-            self.root.set('type', 'default')
+            self.root.set('type', recipeType)
             
         self.recipeType = self.root.attrib['type']
         self.source = Source(self.root)
@@ -30,8 +30,10 @@ class MetaData:
         self.packages = Packages(self.root)
         
         if createTemplate==True:
-            self.targets.target.append('x86')
-            self.targets.target.append('x86_64')
+            
+            if recipeType=='default':
+                self.targets.target.append('x86')
+                self.targets.target.append('x86_64')
             
     
     def write(self):

@@ -8,9 +8,14 @@ import metadata as md
 
 class Spoon:
     def __init__(self):
-        self.sauce = None
         self.tree = None
         self.root = None
+        path = os.getcwd().rstrip('/') 
+        name = os.path.basename(path)
+        sauce = path +'/' + name + ".sauce"
+        self.sauce=sauce
+        self.meta=None
+        #self._initSauce()
         self._defineArgs()
 
     def __checkKeyword(self,word):
@@ -35,21 +40,27 @@ class Spoon:
         newargs.append(sublist)
 
         parser = argparse.ArgumentParser('Create and modify metafiles')
-        subparsers = parser.add_subparsers(description="update/rm/new/reset/config/check")
+        subparsers = parser.add_subparsers(dest="command", description="update/rm/new/reset/config/check")
         configparser = subparsers.add_parser("config", help="print config")
         checkparser = subparsers.add_parser("check", help="check meta information")
         newparser = subparsers.add_parser("new", help="create new metadata template")
         resetparser = subparsers.add_parser("reset", help="reset metadata template")
+        newparser.add_argument("recipeType", action="store", nargs='?', 
+            choices=['default', 'superclass', 'factory', 'info', 'redirect'], default='default')
+        resetparser.add_argument("recipeType", action="store", nargs='?', 
+            choices=['default', 'superclass', 'factory', 'info', 'redirect'], default='default')
         
         commonparser = argparse.ArgumentParser(add_help=False)
         commonsubparsers = commonparser.add_subparsers(dest='action')
         commonargument = argparse.ArgumentParser(add_help=False)
         commonargument.add_argument("argument", action="store",nargs='+',
-            choices=['homepage','license','tag','alias','name','summary','description','flavor', 'target'],
+            #choices=['homepage','license','tag','alias','name','summary','description','flavor', 'target'],
             help="tag to add/remove/show")
         
         updateparser = commonsubparsers.add_parser("update", parents=[commonargument], help="add/update meta information")
         rmparser = commonsubparsers.add_parser("rm", parents=[commonargument], help="remove meta information")
+        showparser = commonsubparsers.add_parser("show", help="show meta information")
+        showparser.add_argument("argument", action="store",nargs='?', choices=['homepage','license','tag','alias','name','summary','description','flavor', 'target'])
         sourceparser = subparsers.add_parser("source", parents=[commonparser], help="modify source component")
         pkgparser = subparsers.add_parser("package", parents=[commonparser], help="modify packages component")
         flavorparser = subparsers.add_parser("flavor", parents=[commonparser], help="modify flavor component")
@@ -57,9 +68,9 @@ class Spoon:
         typeparser = subparsers.add_parser("type", help="set the type of the recipe")
         typeparser.add_argument("recipeType", action="store", choices=['default', 'superclass', 'factory', 'info', 'redirect'])
         configparser.set_defaults(func=self._sourceCmd)
-        checkparser.set_defaults(func=self._sourceCmd)
-        newparser.set_defaults(func=self._sourceCmd)
-        resetparser.set_defaults(func=self._sourceCmd)
+        checkparser.set_defaults(func=self._checkCmd)
+        newparser.set_defaults(func=self._newCmd)
+        resetparser.set_defaults(func=self._resetCmd)
         sourceparser.set_defaults(func=self._sourceCmd)
         pkgparser.set_defaults(func=self._sourceCmd)
         flavorparser.set_defaults(func=self._sourceCmd)
@@ -102,15 +113,13 @@ class Spoon:
         #args = parser.parse_args()
         #args.func(args)
     
-    def initSauce(self,args):
-        if not self.sauce or not self.tree or not self.root:
-            self.path = args.dir if args.dir else os.getcwd() 
-            self.path = self.path.rstrip('/')
-            self.name = os.path.basename(self.path)
-            self.sauce = self.path +'/' + self.name + ".sauce"
-            if os.path.isfile(self.sauce):
-                self.tree = et.parse(self.sauce)
-                self.root = self.tree.getroot()
+    def _initSauce(self,args,createTemplate=False):
+        if self.meta is None:
+            if createTemplate:
+                self.meta = md.MetaData(sauce=self.sauce,createTemplate=createTemplate,recipeType=args.recipeType)
+            else:
+                self.meta = md.MetaData(sauce=self.sauce,createTemplate=createTemplate)
+            #self.root = self.tree.getroot()
 
     def populateSource(self):
         self.addMeta("", tag="source")
@@ -131,22 +140,6 @@ class Spoon:
         if self.recipeType != "factory" and \
            self.recipeType != "superclass":
             self.addMeta("", tag="packages")
-
-    def createTemplate(self, recipeType):
-        self.recipeType=recipeType
-        ### later for recipe parsing
-        #hasRecipe = os.path.isfile(path +'/' + name + '.recipe')
-        #hasStateFile = os.path.isfile(path +'/' + 'CONARY')
-        #print hasRecipe, hasStateFile
-
-        self.tree = et.ElementTree(et.XML("<recipe></recipe>"))
-        self.root = self.tree.getroot()
-        self.root.set('type', recipeType)
-        self.populateSource()
-        self.populateFlavors()
-        self.populateTargets()
-        self.populatePackages()
-        self.write()
 
     def addMeta(self, path="", tag="", attribute=None, text=""):
         if tag:
@@ -184,13 +177,17 @@ class Spoon:
         self.write()
 
     def showMeta(self, path=""):
+        m=self.meta
         if path=="":
-            et.dump(self.root)
-            return
-        for e in self.root.findall(path):
-            et.dump(e)
+            print "recipeType", m.recipeType
+            print "homepage", m.source.homepage
+            print "SourceLicenses", m.source.licenses
+            print "SourceTags", m.source.tags
+            print "SourceAliases", m.source.aliases
 
     def _sourceCmd(self, args):
+        #self._initSauce(args)
+        print args
         if args.action=='update':
             print 'update', args.argument
         else:
@@ -204,29 +201,18 @@ class Spoon:
         attribute = self.splitAttribute(args.attribute)
         self.rmMeta(path=args.path, tag=args.tag, attribute=attribute, text=args.text, force=args.force)
 
-    def delCmd(self, args):
-        self.initSauce(args)
-        self.createTemplate()
+    def _resetCmd(self, args):
+        self._newCmd(args,force=True)
 
-    def showCmd(self, args):
-        self.initSauce(args)
-        self.showMeta(path=args.path)
+    def _checkCmd(self, args):
+        self._initSauce(args)
+        self.showMeta()
 
-    def changeCmd(self, args):
-        self.initSauce(args)
-        attribute = self.splitAttribute(args.attribute)
-        oldattr = self.splitAttribute(args.oldattr)
-        self.changeMeta(path=args.path, tag=args.tag,
-                        oldattribute=oldattr, attribute=attribute,
-                        oldtext=args.oldtext, text=args.text)
-
-    def newCmd(self, args):
-        self.initSauce(args)
-        if os.path.isfile(self.sauce) and not args.force:
+    def _newCmd(self, args, force=False):
+        if os.path.isfile(self.sauce) and not force:
             exit("soucefile already exists")
-        if not args.recipeType:
-            args.recipeType="default"
-        self.createTemplate(args.recipeType)
+        self._initSauce(args,createTemplate=True)
+        self.meta.write()
 
     def splitAttribute(self, attributeStr):
         if not attributeStr:
