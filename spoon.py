@@ -156,7 +156,7 @@ class Spoon:
             print "SourceAliases", m.source.aliases
 
     def _sourceCmd(self, args):
-        #self._initSauce(args)
+        self._initSauce(args)
         print args
         if args.action=='update':
             for tag in args.argument:
