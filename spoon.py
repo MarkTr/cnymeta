@@ -81,37 +81,7 @@ class Spoon:
             args=parser.parse_args(arg)
             args.func(args)
         
-        #subparsers = parser.add_subparsers(description="add remove delete show change")
-        #addparser = subparsers.add_parser("add", help="Add new meta information")
-        #rmparser = subparsers.add_parser("rm", help="Remove meta information")
-        #delparser = subparsers.add_parser("del", help="delete all meta information")
-        #showparser = subparsers.add_parser("show", help="Show meta information")
-        #changeparser = subparsers.add_parser("change", help="Change meta information")
-        #newparser = subparsers.add_parser("new", help="Create a new Template")
-    
-        #newparser.set_defaults(func=self.newCmd)
-        #addparser.set_defaults(func=self.addCmd)
-        #rmparser.set_defaults(func=self.rmCmd)
-        #delparser.set_defaults(func=self.delCmd)
-        #showparser.set_defaults(func=self.showCmd)
-        #changeparser.set_defaults(func=self.changeCmd)
-    
-        #for p in [addparser,changeparser,rmparser,showparser]:
-            #p.add_argument("-p", action="store", dest="path", default="", required=True, help="path inside sauce")
-            #if p!=showparser:
-                #p.add_argument("-t", action="store", dest="tag", required=True, help="tag to add/remove/show")
-                #p.add_argument("-x", action="store", dest="text", help="text to add/remove/show")
-                #p.add_argument("-a", action="store", dest="attribute", help="attribute to add/remove/show")
-            #p.add_argument("-d", action="store", dest="dir", default=None, help="create template here instead of pwd")
-        #changeparser.add_argument("-ox", action="store", dest="oldtext", help="text to replace")
-        #changeparser.add_argument("-oa", action="store", dest="oldattr", help="attribute to replace")
-        #rmparser.add_argument("-f", action="store_true", dest="force", default=False, help="Delete all matching tags")
-        #newparser.add_argument("-t", action="store", dest="recipeType", default="default", help="Type of recipe <default|superclass|factory|info|redirect>")
-        #newparser.add_argument("-f", action="store_true", dest="force", default=False, help="Overwrite existing files")
-        #newparser.add_argument("-d", action="store", dest="dir", default=None, help="create template here instead of pwd")
-    
-        #args = parser.parse_args()
-        #args.func(args)
+        
     
     def _initSauce(self,args,createTemplate=False):
         if self.meta is None:
