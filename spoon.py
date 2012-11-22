@@ -159,7 +159,9 @@ class Spoon:
         #self._initSauce(args)
         print args
         if args.action=='update':
-            print 'update', args.argument
+            for tag in args.argument:
+                data=tag.split('=')
+                self.meta.source.update(data[0],data[1])
         else:
             print 'rm', args.argument
         #self.initSauce(args)
