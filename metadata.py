@@ -138,6 +138,31 @@ class Source:
         if p is None: return
         for e in p.getchildren():
             self.aliases[e.attrib['distro']] = e.text
+            
+    def update(self, tag, value,attribute=None):
+        if tag=='tag':
+            self.tags.append(value)
+        if tag=='homepage':
+            self.homepage=value
+        if tag=='alias':
+            self.aliases['attribute']=value
+        if tag=='license':
+            if value not in self.licenses:
+                self.licenses.append(value)
+            
+            
+            
+                
+        
+    def remove(self, tag, value=None, attribute=None):
+        if tag=='tag':
+            self.tags.remove(value)
+        if tag=='homepage':
+            self.homepage=""
+        if tag=='alias':
+            del self.aliases['attribute']
+        if tag=='license':
+            self.licenses.remove(value)
  
 class Flavors:
     def __init__(self,root):
@@ -149,7 +174,12 @@ class Flavors:
             for f in e.getchildren():
                 flavoring.append(f.text)
             self.flavor[e.attrib['name']] = flavoring
-            
+
+    def update(self, tag, value, oldvalue=None):
+        pass
+        
+    def remove(self, tag, value=None):
+        pass            
             
 class Targets:
     def __init__(self,root):
@@ -158,7 +188,13 @@ class Targets:
         if p is None: return
         for e in p:
             self.target.append(e.text)
+
+    def update(self, tag, value, oldvalue=None):
+        pass
         
+    def remove(self, tag, value=None):
+        pass
+
 class Packages:
     def __init__(self,root):
         self.package={}
@@ -189,7 +225,13 @@ class Packages:
                     
             self.package[name] = Packages.Package(name=name, licenses=licenses, 
                 aliases=aliases, tags=tags, descriptions=descriptions)
-                
+
+    def update(self, tag, value, oldvalue=None):
+        pass
+        
+    def remove(self, tag, value=None):
+        pass
+        
     class Package:
         def __init__(self, name="", licenses=[], aliases={},tags=[], descriptions={}):
             self.name=name
@@ -198,3 +240,9 @@ class Packages:
             self.tags=tags
             self.descriptions=descriptions
     
+
+    def update(self, tag, value, oldvalue=None):
+        pass
+        
+    def remove(self, tag, value=None):
+        pass
