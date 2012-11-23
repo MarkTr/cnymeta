@@ -34,7 +34,26 @@ class MetaData:
             if recipeType=='default':
                 self.targets.target.append('x86')
                 self.targets.target.append('x86_64')
-            
+
+    def update(self, scope, tag, value):
+        if scope=='source':
+            self.source.update(tag=tag, value=value)
+        if scope=='flavor':
+            self.flavors.update(tag=tag, value=value)
+        if scope=='targets':
+            self.targets.update(tag=tag, value=value)
+        if scope=='packages':
+            self.packages.update(tag=tag, value=value)
+        
+    def remove(self, scope, tag, value=None):
+        if scope=='source':
+            self.source.remove(tag=tag, value=value)
+        if scope=='flavor':
+            self.flavors.remove(tag=tag, value=value)
+        if scope=='targets':
+            self.targets.remove(tag=tag, value=value)
+        if scope=='packages':
+            self.packages.remove(tag=tag, value=value) 
     
     def write(self):
         tree = et.ElementTree(et.XML("<recipe></recipe>"))
@@ -139,28 +158,27 @@ class Source:
         for e in p.getchildren():
             self.aliases[e.attrib['distro']] = e.text
             
-    def update(self, tag, value,attribute=None):
+    def update(self, tag, value):
         if tag=='tag':
             self.tags.append(value)
         if tag=='homepage':
             self.homepage=value
         if tag=='alias':
-            self.aliases['attribute']=value
+            data=value.split(':')
+            print data
+            self.aliases[data[0]]=data[1]
         if tag=='license':
             if value not in self.licenses:
                 self.licenses.append(value)
             
-            
-            
-                
-        
-    def remove(self, tag, value=None, attribute=None):
+    def remove(self, tag, value=None):
         if tag=='tag':
             self.tags.remove(value)
         if tag=='homepage':
             self.homepage=""
         if tag=='alias':
-            del self.aliases['attribute']
+            data=value.split(':')
+            del self.aliases[data[0]]
         if tag=='license':
             self.licenses.remove(value)
  
@@ -175,11 +193,15 @@ class Flavors:
                 flavoring.append(f.text)
             self.flavor[e.attrib['name']] = flavoring
 
-    def update(self, tag, value, oldvalue=None):
-        pass
+    def update(self, tag, value):
+        print 'here'
+        if tag in self.flavor:
+            self.flavor[tag].append(value)
+        else:
+            self.flavor[tag]=[value]
         
     def remove(self, tag, value=None):
-        pass            
+        self.flavor[tag].remove(value)
             
 class Targets:
     def __init__(self,root):

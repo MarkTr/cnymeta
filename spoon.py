@@ -40,7 +40,7 @@ class Spoon:
         newargs.append(sublist)
 
         parser = argparse.ArgumentParser('Create and modify metafiles')
-        subparsers = parser.add_subparsers(dest="command", description="update/rm/new/reset/config/check")
+        subparsers = parser.add_subparsers(dest="scope", description="update/rm/new/reset/config/check")
         configparser = subparsers.add_parser("config", help="print config")
         checkparser = subparsers.add_parser("check", help="check meta information")
         newparser = subparsers.add_parser("new", help="create new metadata template")
@@ -51,7 +51,7 @@ class Spoon:
             choices=['default', 'superclass', 'factory', 'info', 'redirect'], default='default')
         
         commonparser = argparse.ArgumentParser(add_help=False)
-        commonsubparsers = commonparser.add_subparsers(dest='action')
+        commonsubparsers = commonparser.add_subparsers(dest='command')
         commonargument = argparse.ArgumentParser(add_help=False)
         commonargument.add_argument("argument", action="store",nargs='+',
             #choices=['homepage','license','tag','alias','name','summary','description','flavor', 'target'],
@@ -67,15 +67,15 @@ class Spoon:
         targetparser = subparsers.add_parser("target", parents=[commonparser], help="modify target component")
         typeparser = subparsers.add_parser("type", help="set the type of the recipe")
         typeparser.add_argument("recipeType", action="store", choices=['default', 'superclass', 'factory', 'info', 'redirect'])
-        configparser.set_defaults(func=self._sourceCmd)
+        configparser.set_defaults(func=self._configCmd)
         checkparser.set_defaults(func=self._checkCmd)
         newparser.set_defaults(func=self._newCmd)
         resetparser.set_defaults(func=self._resetCmd)
-        sourceparser.set_defaults(func=self._sourceCmd)
-        pkgparser.set_defaults(func=self._sourceCmd)
-        flavorparser.set_defaults(func=self._sourceCmd)
-        targetparser.set_defaults(func=self._sourceCmd)
-        typeparser.set_defaults(func=self._sourceCmd)
+        sourceparser.set_defaults(func=self._scopeCmd)
+        pkgparser.set_defaults(func=self._scopeCmd)
+        flavorparser.set_defaults(func=self._scopeCmd)
+        targetparser.set_defaults(func=self._scopeCmd)
+        typeparser.set_defaults(func=self._scopeCmd)
         
         for arg in newargs:
             args=parser.parse_args(arg)
@@ -90,26 +90,6 @@ class Spoon:
             else:
                 self.meta = md.MetaData(sauce=self.sauce,createTemplate=createTemplate)
             #self.root = self.tree.getroot()
-
-    def populateSource(self):
-        self.addMeta("", tag="source")
-        self.addMeta("source", tag="homepage", text="http://www.foresightlinux.org")
-        self.addMeta("source", tag="licensing")
-        self.addMeta("source", tag="tags")
-        self.addMeta("source", tag="aliases")
-
-    def populateFlavors(self):
-        self.addMeta("", tag="flavors")
-
-    def populateTargets(self):
-        self.addMeta("", tag="targets")
-        self.addMeta("targets", tag="target", text="True", attribute={"arch":"x86"})
-        self.addMeta("targets", tag="target", text="True", attribute={"arch":"x86_64"})
-
-    def populatePackages(self):
-        if self.recipeType != "factory" and \
-           self.recipeType != "superclass":
-            self.addMeta("", tag="packages")
 
     def addMeta(self, path="", tag="", attribute=None, text=""):
         if tag:
@@ -154,24 +134,23 @@ class Spoon:
             print "SourceLicenses", m.source.licenses
             print "SourceTags", m.source.tags
             print "SourceAliases", m.source.aliases
+            
+            print "Flavors", m.flavors.flavor
 
-    def _sourceCmd(self, args):
+    def _scopeCmd(self, args):
         self._initSauce(args)
         print args
-        if args.action=='update':
-            for tag in args.argument:
-                data=tag.split('=')
-                self.meta.source.update(data[0],data[1])
-        else:
-            print 'rm', args.argument
-        #self.initSauce(args)
-        #attribute = self.splitAttribute(args.attribute)
-        #self.addMeta(path=args.path, tag=args.tag, attribute=attribute, text=args.text)
+        
+        for tag in args.argument:
+            data=tag.split('=')
+            if args.command=='update':
+                self.meta.update(args.scope, data[0],data[1])
+            else:
+                self.meta.remove(args.scope, data[0],data[1])
+        self.showMeta()
 
-    def rmCmd(self, args):
-        self.initSauce(args)
-        attribute = self.splitAttribute(args.attribute)
-        self.rmMeta(path=args.path, tag=args.tag, attribute=attribute, text=args.text, force=args.force)
+    def _configCmd(self, args):
+        pass
 
     def _resetCmd(self, args):
         self._newCmd(args,force=True)
