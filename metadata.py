@@ -2,6 +2,7 @@
 import lxml.etree as et
 import os
 import sys
+import string
 
 class MetaData:
     def __init__(self, sauce=None, createTemplate=False, recipeType='default'):
@@ -40,21 +41,36 @@ class MetaData:
             self.source.update(tag=tag, value=value)
         if scope=='flavor':
             self.flavors.update(tag=tag, value=value)
-        if scope=='targets':
+        if scope=='target':
             self.targets.update(tag=tag, value=value)
-        if scope=='packages':
+        if scope=='package':
             self.packages.update(tag=tag, value=value)
+        if scope=='recipe':
+            if tag=='type':
+                self.recipeType=value
         
     def remove(self, scope, tag, value=None):
         if scope=='source':
             self.source.remove(tag=tag, value=value)
         if scope=='flavor':
             self.flavors.remove(tag=tag, value=value)
-        if scope=='targets':
+        if scope=='target':
             self.targets.remove(tag=tag, value=value)
-        if scope=='packages':
+        if scope=='package':
             self.packages.remove(tag=tag, value=value) 
-    
+
+    def show(self,scope=None,tag=None):
+        if scope=='recipe' or scope==None:
+            print 'recipeType', self.recipeType
+        if scope=='source' or scope==None: # TODO: there must be a more clever way
+            self.source.show(tag)
+        if scope=='flavor' or scope==None:
+            self.flavors.show(tag)
+        if scope=='target' or scope==None:
+            self.targets.show(tag)
+        if scope=='package' or scope==None:
+            self.packages.show(tag)
+
     def write(self):
         tree = et.ElementTree(et.XML("<recipe></recipe>"))
         root = tree.getroot()
@@ -94,7 +110,7 @@ class MetaData:
             self._createLicensing(package.licenses,p)
             self._createAliases(package.aliases,p)
             self._createTags(package.tags,p)
-            descriptions=et.SubElement(p,'description')
+            descriptions=et.SubElement(p,'descriptions')
             for lang in package.descriptions:
                 l=et.SubElement(descriptions,'locale',{'lang':lang})
                 locale=package.descriptions[lang]
@@ -165,7 +181,6 @@ class Source:
             self.homepage=value
         if tag=='alias':
             data=value.split(':')
-            print data
             self.aliases[data[0]]=data[1]
         if tag=='license':
             if value not in self.licenses:
@@ -181,6 +196,16 @@ class Source:
             del self.aliases[data[0]]
         if tag=='license':
             self.licenses.remove(value)
+
+    def show(self, tag):
+        if tag=='tag' or tag==None:
+            print 'Tags', self.tags
+        if tag=='homepage' or tag==None:
+            print 'Homepage', self.homepage
+        if tag=='alias' or tag==None:
+            print 'Aliases', self.aliases
+        if tag=='license' or tag==None:
+            print 'Licenses', self.licenses
  
 class Flavors:
     def __init__(self,root):
@@ -194,7 +219,6 @@ class Flavors:
             self.flavor[e.attrib['name']] = flavoring
 
     def update(self, tag, value):
-        print 'here'
         if tag in self.flavor:
             self.flavor[tag].append(value)
         else:
@@ -202,6 +226,9 @@ class Flavors:
         
     def remove(self, tag, value=None):
         self.flavor[tag].remove(value)
+        
+    def show(self,tag):
+        print 'Flavors', self.flavor
             
 class Targets:
     def __init__(self,root):
@@ -211,11 +238,16 @@ class Targets:
         for e in p:
             self.target.append(e.text)
 
-    def update(self, tag, value, oldvalue=None):
-        pass
+    def update(self, tag, value):
+        if value not in self.taget:
+            self.target.append(value)
         
     def remove(self, tag, value=None):
-        pass
+        if value in self.target:
+            self.target.remove(value)
+            
+    def show(self,tag):
+        print 'Targets', self.target
 
 class Packages:
     def __init__(self,root):
@@ -244,15 +276,36 @@ class Packages:
                         for l in d.getchildren():
                             locale[l.tag]=l.text
                         descriptions[d.attrib['lang']]=locale
-                    
             self.package[name] = Packages.Package(name=name, licenses=licenses, 
                 aliases=aliases, tags=tags, descriptions=descriptions)
 
-    def update(self, tag, value, oldvalue=None):
-        pass
+    def update(self, tag, value):
+        tag=tag.split(':',1)
+        if tag[0] not in self.package:
+            self.package[tag[0]]=Packages.Package(name=tag[0])
+        if len(tag)>1:    
+            self.package[tag[0]].update(tag[1], value)
+            
         
     def remove(self, tag, value=None):
-        pass
+        tag=tag.split(':',1)
+        if len(tag)==1:
+            del self.package[tag[0]]
+        else:
+            self.package[tag[0]].remove(tag[1],value)
+        
+    def show(self,tag):
+        if tag is not None:
+            splittag=tag.split(':',1)
+        if tag is not None and splittag[0] in self.package:
+            if len(splittag)==1:
+                print self.package[splittag[0]].show(None)
+            else:
+                self.package[splittag[0]].show(splittag[1])
+        else:
+            for pkg in self.package:
+                self.package[pkg].show(tag)
+            
         
     class Package:
         def __init__(self, name="", licenses=[], aliases={},tags=[], descriptions={}):
@@ -261,10 +314,68 @@ class Packages:
             self.aliases=aliases
             self.tags=tags
             self.descriptions=descriptions
-    
 
-    def update(self, tag, value, oldvalue=None):
-        pass
+        def update(self, tag, value):
+            attribute=None
+            if ':' in tag:
+                tag,attribute=tag.split(':',1)
+            if tag=='license':
+                self.licenses.append(value)
+            if tag=='alias':
+                self.aliases[attribute]=value
+            if tag=='tag':
+                if value not in self.tags:
+                    self.tags.append(value)
+            if tag=='summary' or tag=='description':
+                if not attribute:
+                    attribute='en'
+                if attribute in self.descriptions:
+                    self.descriptions[attribute][tag]=value
+                else:
+                    self.descriptions[attribute]={tag:value}
         
-    def remove(self, tag, value=None):
-        pass
+        def remove(self, tag, value=None):
+            attribute=None
+            if ':' in tag:
+                tag,attribute=tag.split(':',1)
+            if tag=='license':
+                if value is not None:
+                    self.licenses.remove(value)
+                else:
+                    self.licenses =[]
+            if tag=='alias':
+                if attribute is not None:
+                    del self.aliases[attribute]
+                else:
+                    self.aliases={}
+            if tag=='tag':
+                if value not None:
+                    if value in self.tags:
+                        self.tags.remove(value)
+                self.tags=[]
+            if tag=='summary' or tag=='description':
+                if not attribute:
+                    attribute='en'
+                if attribute in self.descriptions:
+                    del self.descriptions[attribute][tag]
+                if len(self.descriptions[attribute])==0:
+                    del self.descriptions[attribute]
+    
+        def show(self,tag):
+            attribute=None
+            if tag is not None and ':' in tag:
+                tag,attribute=tag.split(':',1)
+            if tag=='name' or tag==None:
+                print self.name+'Name',self.name
+            if tag=='license' or tag==None:
+                print self.name+'Licenses',self.licenses
+            if tag=='alias' or tag==None:
+                print self.name+'Aliases',self.aliases
+            if tag=='tag' or tag==None:
+                print self.name+'Tags',self.tags
+            if tag=='summary' or tag==None:
+                for lang in self.descriptions:
+                    print self.name+lang.capitalize()+'Summary',self.descriptions[lang]['summary']
+            if tag=='description' or tag==None:
+                for lang in self.descriptions:
+                    print self.name+lang.capitalize()+'Description',self.descriptions[lang]['description']

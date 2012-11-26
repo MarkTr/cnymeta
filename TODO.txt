@@ -1,8 +1,7 @@
 * create template based on recipe type (from option)
-* add editing of metadata via python
 * abstract metadata from xml
 * Get usefull information from recipe
-
+* ADD SANITY CHECKS!
 <target arch="x86">True</target> -> <target>x86</target> (simmilar syntax to tags for consistency.
 
 *config* (for consistency with cvc / rmake / conary) and *check*.
@@ -67,3 +66,5 @@ recipe add type=<default|...> will be set
 in template as default anyway 
 spoon <packages|source|flavors|targets> will only be calalble after spoon new 
     some tests can go built in. shareable code.
+    
+==> <packagename>:description:<lang>=...

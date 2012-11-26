@@ -1,66 +1,9 @@
-* meta.py - commandline tool to create and manipulate metadata
-    add                 Add new meta information
-            -p PATH       path inside sauce
-            -t TAG        tag to add/remove/show
-            -x TEXT       text to add/remove/show
-            -a ATTRIBUTE  attribute to add/remove/show
-            -d DIR        create template here instead of pwd
-        example:
-            This adds an alias name of the (binary)package used by distribution foo
-            ./meta add -d conary/src/foo -p packages/package/aliases -t alias -x foo_pkg-name -a distro=foo
-        * at the moment it's only possible to add one tag at a time
-        * the name of the xml file is always `basename`.sauce for now   
-        
-    rm                  Remove meta information
-            -p PATH       path inside sauce
-            -t TAG        tag to add/remove/show
-            -x TEXT       text to add/remove/show
-            -a ATTRIBUTE  attribute to add/remove/show
-            -d DIR        create template here instead of pwd
-            -f            Delete all matching tags
-        examples:
-            This remove the GPLv2 license from the metadate of the sourcepackage:
-            ./meta.py rm -p source/licensing -t license -xGPLv2
-            This removes all licenses:
-            ./meta.py rm -p source/licensing -t license -f
-            And this won't remove anything:
-            ./meta.py rm -p source/licensing -t license
-                
-    del                 delete all meta information
-        * cleans all metadata, same as new -f, look there for details
-        
-    show                Show meta information
-            -h, --help  show this help message and exit
-            -p PATH     path inside sauce
-            -d DIR      create template here instead of pwd
-        example:
-            To see all tags
-           ./meta.py show -p "source/tags"
-           
-    change              Change meta information
-            -p PATH       path inside sauce
-            -t TAG        tag to add/remove/show
-            -x TEXT       text to add/remove/show
-            -a ATTRIBUTE  attribute to add/remove/show
-            -d DIR        create template here instead of pwd
-            -ox OLDTEXT   text to replace
-            -oa OLDATTR   attribute to replace
-        examples:
-            This replaces a fedora alias with a gentoo one:
-           ./meta.py change -p "source/aliases" -t alias -ox fedora_foo -x gentoo_foo -oa distro=fedora -a distro=gentoo 
-        *Channging of the type attribute of <recipe> is a bit 'ugly' because <recipe> is the root node:
-            ./meta.py change -p "" -t recipe -oa type=default -a type=redirect
-                or
-            ./meta.py change -p "" -t "" -oa type=redirect -a type=info
+* spoon.py
+    examples
+    ./spoon.py package show pkgname.description.de
+    ./spoon.py package update pkgname:summary:de='Deutsche Zusammenfassungszeile' package update pkgname:alias:ubuntu=ubfoo flavor update 'bootstrap=bootstrap,cross' flavor update 'bootstrap=bootstrap,!cross'
 
-    new                 Create a new Template
-            -t RECIPETYPE  Type of recipe <default|superclass|factory|info|redirect>
-            -f             Overwrite existing files
-            -d DIR         create template here instead of pwd
-        example:
-            This creates a new saucefile template of type factory (overwriting existing ones)
-            ./meta.py new -f -t factory
-            
+
 * metadata maps metadata into python objects/dicts
 	MetaData(sauce=None, createTemplate=False) - class that maps Metadata to python.
 		write() - writes all Changes to the saucefile

@@ -45,6 +45,7 @@ class Spoon:
         checkparser = subparsers.add_parser("check", help="check meta information")
         newparser = subparsers.add_parser("new", help="create new metadata template")
         resetparser = subparsers.add_parser("reset", help="reset metadata template")
+        globalshowparser = subparsers.add_parser("show", help="show all metadata")
         newparser.add_argument("recipeType", action="store", nargs='?', 
             choices=['default', 'superclass', 'factory', 'info', 'redirect'], default='default')
         resetparser.add_argument("recipeType", action="store", nargs='?', 
@@ -54,13 +55,12 @@ class Spoon:
         commonsubparsers = commonparser.add_subparsers(dest='command')
         commonargument = argparse.ArgumentParser(add_help=False)
         commonargument.add_argument("argument", action="store",nargs='+',
-            #choices=['homepage','license','tag','alias','name','summary','description','flavor', 'target'],
             help="tag to add/remove/show")
         
         updateparser = commonsubparsers.add_parser("update", parents=[commonargument], help="add/update meta information")
         rmparser = commonsubparsers.add_parser("rm", parents=[commonargument], help="remove meta information")
         showparser = commonsubparsers.add_parser("show", help="show meta information")
-        showparser.add_argument("argument", action="store",nargs='?', choices=['homepage','license','tag','alias','name','summary','description','flavor', 'target'])
+        showparser.add_argument("argument", action="store", nargs='?', default=None)
         sourceparser = subparsers.add_parser("source", parents=[commonparser], help="modify source component")
         pkgparser = subparsers.add_parser("package", parents=[commonparser], help="modify packages component")
         flavorparser = subparsers.add_parser("flavor", parents=[commonparser], help="modify flavor component")
@@ -75,12 +75,13 @@ class Spoon:
         pkgparser.set_defaults(func=self._scopeCmd)
         flavorparser.set_defaults(func=self._scopeCmd)
         targetparser.set_defaults(func=self._scopeCmd)
-        typeparser.set_defaults(func=self._scopeCmd)
+        typeparser.set_defaults(func=self._typeCmd)
+        globalshowparser.set_defaults(func=self._showCmd)
         
         for arg in newargs:
             args=parser.parse_args(arg)
             args.func(args)
-        
+        self.meta.write()
         
     
     def _initSauce(self,args,createTemplate=False):
@@ -91,64 +92,32 @@ class Spoon:
                 self.meta = md.MetaData(sauce=self.sauce,createTemplate=createTemplate)
             #self.root = self.tree.getroot()
 
-    def addMeta(self, path="", tag="", attribute=None, text=""):
-        if tag:
-            parent = self.root if path=="" else self.root.find(path)
-            e = et.SubElement(parent,tag)
-            if attribute:
-                e.attrib.update(attribute)
-            if text:
-                e.text = text
-        self.write()
-
-    def rmMeta(self, path="", tag="", attribute=None, text="", force=False):
-        for p in self.root.findall(path):
-            for e in p.getchildren():
-                if tag == e.tag and (text=="" or text == e.text) and (not attribute or e.attrib and attribute == e.attrib) \
-                   or tag == e.tag and force:
-                    p.remove(e)
-                    self.write()
-
-    def changeMeta(self, path="", tag="", oldattribute=None, attribute=None, oldtext=None, text=None):
-        if path=="" and tag=="" or tag=='recipe':
-            if attribute and oldattribute==self.root.attrib:
-                self.root.attrib.clear()
-                self.root.attrib.update(attribute)
-                self.write()
-            return
-        for p in self.root.findall(path):
-            for e in p.getchildren():
-                if tag == e.tag:
-                     if text and oldtext == e.text:
-                         e.text=text
-                     if attribute and oldattribute == e.attrib:
-                         e.attrib.clear()
-                         e.attrib.update(attribute)
-        self.write()
-
-    def showMeta(self, path=""):
-        m=self.meta
-        if path=="":
-            print "recipeType", m.recipeType
-            print "homepage", m.source.homepage
-            print "SourceLicenses", m.source.licenses
-            print "SourceTags", m.source.tags
-            print "SourceAliases", m.source.aliases
-            
-            print "Flavors", m.flavors.flavor
+    def showMeta(self, scope=None,tag=None):
+        self.meta.show(scope=scope,tag=tag)
 
     def _scopeCmd(self, args):
         self._initSauce(args)
-        print args
-        
+        if args.command=='show':
+            self.showMeta(scope=args.scope,tag=args.argument)
+            return
         for tag in args.argument:
             data=tag.split('=')
             if args.command=='update':
-                self.meta.update(args.scope, data[0],data[1])
-            else:
-                self.meta.remove(args.scope, data[0],data[1])
-        self.showMeta()
+                self.meta.update(args.scope, data[0],data[1] if len(data)>1 else None)
+            if args.command=='rm':
+                self.meta.remove(args.scope, data[0],data[1] if len(data)>1 else None)
 
+
+    def _showCmd(self,args):
+        self._initSauce(args)
+        self.showMeta()
+        
+    def _typeCmd(self,args):
+        self._initSauce(args)
+        # misusing scope on purpose here
+        self.meta.update('recipe', args.scope, args.recipeType)
+        self.showMeta()
+        
     def _configCmd(self, args):
         pass
 
@@ -164,12 +133,6 @@ class Spoon:
             exit("soucefile already exists")
         self._initSauce(args,createTemplate=True)
         self.meta.write()
-
-    def splitAttribute(self, attributeStr):
-        if not attributeStr:
-            return None
-        tmpattr = attributeStr.split('=')
-        return {tmpattr[0]:tmpattr[1]}
 
     def write(self):
         self.tree.write(self.sauce, encoding="utf-8", pretty_print=True, xml_declaration=True)
