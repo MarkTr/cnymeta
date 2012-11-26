@@ -349,7 +349,7 @@ class Packages:
                 else:
                     self.aliases={}
             if tag=='tag':
-                if value not None:
+                if value is not None:
                     if value in self.tags:
                         self.tags.remove(value)
                 self.tags=[]
