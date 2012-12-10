@@ -8,8 +8,10 @@ class MetaData:
     def __init__(self, sauce=None, createTemplate=False, recipeType='default'):
         if not sauce or sauce == "":
             path = os.getcwd().rstrip('/') 
-            name = os.path.basename(path)
-            sauce = path +'/' + name + ".sauce"
+            self.name = os.path.basename(path)
+            sauce = path +'/' + self.name + ".sauce"
+        else:
+            self.name = os.path.basename(sauce).split('.')[0]
         if not createTemplate and not os.path.isfile(sauce):
             sys.exit ('saucefile does not exist')
         self.sauce=sauce
@@ -26,15 +28,19 @@ class MetaData:
             
         self.recipeType = self.root.attrib['type']
         self.source = Source(self.root)
-        self.flavors = Flavors(self.root)
-        self.targets = Targets(self.root)
-        self.packages = Packages(self.root)
+        if recipeType=='default':
+            self.flavors = Flavors(self.root)
+            self.targets = Targets(self.root)
+            self.packages = Packages(self.root)
         
         if createTemplate==True:
-            
             if recipeType=='default':
-                self.targets.target.append('x86')
-                self.targets.target.append('x86_64')
+                self.update('flavor', "!bootstrap", "!bootstrap")
+                self.update('target', None,'x86')
+                self.update('target', None, 'x86_64')
+                self.update('package', self.name+':'+'name',self.name)
+            else:
+                self.update('source','homepage','http://www.foresightlinux.org')
 
     def update(self, scope, tag, value):
         if scope=='source':
@@ -88,35 +94,36 @@ class MetaData:
             
         self._createAliases(self.source.aliases,source)
         
-        # Flavors
-        flavors=et.SubElement(root,'flavors')
-        for k in self.flavors.flavor:
-            flavor=et.SubElement(flavors,'flavor',attrib={'name':k})
-            for e in self.flavors.flavor[k]:
-                f=et.SubElement(flavor,'flavoring')
-                f.text=e
-        
-        # Targets
-        targets=et.SubElement(root,'targets')
-        for k in self.targets.target:
-            t=et.SubElement(targets,'target')
-            t.text=k
+        if self.recipeType=='default':        
+            # Flavors
+            flavors=et.SubElement(root,'flavors')
+            for k in self.flavors.flavor:
+                flavor=et.SubElement(flavors,'flavor',attrib={'name':k})
+                for e in self.flavors.flavor[k]:
+                    f=et.SubElement(flavor,'flavoring')
+                    f.text=e
             
-        # packages
-        packages=et.SubElement(root,'packages')
-        for k in self.packages.package:
-            p=et.SubElement(packages,'package',{'name':k})
-            package=self.packages.package[k]
-            self._createLicensing(package.licenses,p)
-            self._createAliases(package.aliases,p)
-            self._createTags(package.tags,p)
-            descriptions=et.SubElement(p,'descriptions')
-            for lang in package.descriptions:
-                l=et.SubElement(descriptions,'locale',{'lang':lang})
-                locale=package.descriptions[lang]
-                for i in locale:
-                    e=et.SubElement(l,i)
-                    e.text=locale[i]
+            # Targets
+            targets=et.SubElement(root,'targets')
+            for k in self.targets.target:
+                t=et.SubElement(targets,'target')
+                t.text=k
+                
+            # packages
+            packages=et.SubElement(root,'packages')
+            for k in self.packages.package:
+                p=et.SubElement(packages,'package',{'name':k})
+                package=self.packages.package[k]
+                self._createLicensing(package.licenses,p)
+                self._createAliases(package.aliases,p)
+                self._createTags(package.tags,p)
+                descriptions=et.SubElement(p,'descriptions')
+                for lang in package.descriptions:
+                    l=et.SubElement(descriptions,'locale',{'lang':lang})
+                    locale=package.descriptions[lang]
+                    for i in locale:
+                        e=et.SubElement(l,i)
+                        e.text=locale[i]
                     
         self.tree=tree
         self.root=root
@@ -239,7 +246,7 @@ class Targets:
             self.target.append(e.text)
 
     def update(self, tag, value):
-        if value not in self.taget:
+        if value not in self.target:
             self.target.append(value)
         
     def remove(self, tag, value=None):
