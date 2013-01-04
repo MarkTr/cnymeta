@@ -1,8 +1,6 @@
-* create template based on recipe type (from option)
-* abstract metadata from xml
+* abstract metadata from xml (drop lxml)
 * Get usefull information from recipe
 * ADD SANITY CHECKS!
-<target arch="x86">True</target> -> <target>x86</target> (simmilar syntax to tags for consistency.
 
 *config* (for consistency with cvc / rmake / conary) and *check*.
     *check* will do internal consistency checks so that minimal info always

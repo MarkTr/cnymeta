@@ -1,6 +1,6 @@
 * spoon.py
     examples
-    ./spoon.py package show pkgname.description.de
+    ./spoon.py package show pkgname:description:de
     ./spoon.py package update pkgname:summary:de='Deutsche Zusammenfassungszeile' package update pkgname:alias:ubuntu=ubfoo flavor update 'bootstrap=bootstrap,cross' flavor update 'bootstrap=bootstrap,!cross'
 
 
